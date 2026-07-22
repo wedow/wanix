@@ -1,0 +1,5 @@
+#!/bin/sh
+# Sourced by /bin/init (extras/linux/bin/init) at boot when present.
+# Brings up guest networking in the background once the v86 network relay
+# is connected, without blocking the login shell on /dev/hvc0.
+/bin/startnet &

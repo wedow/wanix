@@ -1,3 +1,9 @@
 #!/bin/sh
+# Bring up eth0 (the ne2k NIC, built into the kernel) and obtain a DHCP
+# lease. The v86 relay websocket may still be opening when init sources
+# /boot/rc at boot, so retry DHCP rather than fail silently.
 ifconfig eth0 up
-udhcpc -i eth0 -s /bin/post-dhcp
+for i in 1 2 3 4 5; do
+    udhcpc -i eth0 -t 3 -T 2 -n -s /bin/post-dhcp && break
+    sleep 2
+done

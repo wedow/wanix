@@ -1,5 +1,3 @@
-//go:build js && wasm
-
 package main
 
 import (
@@ -35,7 +33,8 @@ func parseFlags(args []string) (map[string]any, error) {
 		append string
 
 		// Network options
-		netdev string
+		netdev   string
+		relayURL string
 
 		// VirtFS options
 		virtfs string
@@ -60,12 +59,16 @@ func parseFlags(args []string) (map[string]any, error) {
 	f.BoolVar(&acpi, "acpi", false, "Enable ACPI")
 	f.BoolVar(&fastboot, "fastboot", false, "Enable fast boot")
 	f.StringVar(&netdev, "netdev", "", "Network device configuration")
+	f.StringVar(&relayURL, "relay", "", "Network relay URL (ws:// or wss://)")
 	f.StringVar(&virtfs, "virtfs", "", "VirtFS configuration")
 	if err := f.Parse(args); err != nil {
 		return nil, err
 	}
 	if os.Getenv("VM_APPEND") != "" {
 		append = os.Getenv("VM_APPEND")
+	}
+	if os.Getenv("VM_RELAY_URL") != "" {
+		relayURL = os.Getenv("VM_RELAY_URL")
 	}
 	memorySize, err := parseMemorySize(mem)
 	if err != nil {
@@ -85,6 +88,15 @@ func parseFlags(args []string) (map[string]any, error) {
 	}
 	if netdev != "" {
 		cfg["net_device"] = parseNetdev(netdev)
+	}
+	if relayURL != "" {
+		// Top-level key: v86 reads b.network_relay_url first (libv86.mjs:276).
+		// A bare ws:// URL selects v86's raw-websocket adapter, which is what
+		// the env86/go-netstack QEMU relay speaks. Leave net_device alone:
+		// main.go's virtio default matches the guest's virtio_net driver and
+		// works with the relay, whereas forcing ne2k breaks the guest's
+		// virtio-9p rootfs in this v86 build.
+		cfg["network_relay_url"] = relayURL
 	}
 	if virtfs != "" {
 		cfg["filesystem"] = parseVirtfs(virtfs)

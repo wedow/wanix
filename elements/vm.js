@@ -39,10 +39,15 @@ export class VMElement extends WanixElement {
         });
 
         this.task.type = "gojs";
+        this.task.env = "";
         if (this.hasAttribute("append")) {
-            this.task.env = `VM_APPEND=${this.getAttribute("append")}\n`;
-        } else {
-            this.task.env = "";
+            this.task.env += `VM_APPEND=${this.getAttribute("append")}\n`;
+        }
+        if (this.hasAttribute("relay")) {
+            // Routed through env (not the whitespace-split arg string) for the
+            // same reason `append` is: URLs contain colons/slashes that break
+            // quoting. Lands in v86's top-level network_relay_url option.
+            this.task.env += `VM_RELAY_URL=${this.getAttribute("relay")}\n`;
         }
         this.task.cmd = `#vm/${this.type}/${this.type}-vm.wasm ${args.join(" ")}`;
     }
