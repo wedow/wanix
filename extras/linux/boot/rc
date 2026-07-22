@@ -1,5 +1,7 @@
 #!/bin/sh
 # Sourced by /bin/init (extras/linux/bin/init) at boot when present.
-# Brings up guest networking in the background once the v86 network relay
-# is connected, without blocking the login shell on /dev/hvc0.
+# /dev/fd is required by bash process substitution (harness uses it); devtmpfs
+# mounts /dev at boot without it, so create the symlink here. Then bring up
+# guest networking in the background once the v86 relay connects.
+ln -sf /proc/self/fd /dev/fd 2>/dev/null
 /bin/startnet &
